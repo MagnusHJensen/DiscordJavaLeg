@@ -11,6 +11,7 @@ import dk.magnusjensen.discordjavaleg.events.channel.ChannelCreateEvent;
 import dk.magnusjensen.discordjavaleg.events.channel.ChannelDeleteEvent;
 import dk.magnusjensen.discordjavaleg.events.channel.ChannelUpdateEvent;
 import dk.magnusjensen.discordjavaleg.events.guild.*;
+import dk.magnusjensen.discordjavaleg.events.message.MessageReactionAddEvent;
 import dk.magnusjensen.discordjavaleg.events.message.MessageRecievedEvent;
 
 import java.util.ArrayList;
@@ -182,11 +183,17 @@ public class EventHandler {
 			case "INVITE_DELETE": {
 				String code = data.get("code").textValue();
 
+				GuildInviteDeleteEvent event = new GuildInviteDeleteEvent(this.client, code);
+
 				if (data.hasNonNull("guild_id")) {
 					GuildEntity guild = this.client.getGuild(Long.parseLong(data.get("guild_id").textValue()));
+					InviteEntity invite = guild.getInvite(code);
+					if (invite != null) {
+						event.setInvite(invite);
+					}
 					guild.removeInvite(code);
 				}
-				GuildInviteDeleteEvent event = new GuildInviteDeleteEvent(this.client, code);
+
 				ArrayList<EventListener<? extends Event>> listeners = this.client.getBuilder().getListenersForEvent(GuildInviteDeleteEvent.class.getTypeName());
 				listeners.forEach((listener) -> ((EventListener<GuildInviteDeleteEvent>) listener).onEvent(event));
 				break;

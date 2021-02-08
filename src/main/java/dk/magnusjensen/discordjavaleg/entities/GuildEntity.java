@@ -17,9 +17,7 @@ public class GuildEntity implements ISnowflake {
 	private String splash = null;
 	@Nullable
 	private String discoverySplash = null;
-	private boolean owner = false;
 	private long ownerId;
-	private String permissions = "0";
 	private String region;
 	@Nullable
 	private Long afkChannelId = null;
@@ -90,13 +88,6 @@ public class GuildEntity implements ISnowflake {
 		this.discoverySplash = discoverySplash;
 	}
 
-	public boolean isOwner() {
-		return owner;
-	}
-
-	public void setOwner(boolean owner) {
-		this.owner = owner;
-	}
 
 	public long getOwnerId() {
 		return ownerId;
@@ -106,13 +97,6 @@ public class GuildEntity implements ISnowflake {
 		this.ownerId = ownerId;
 	}
 
-	public String getPermissions() {
-		return permissions;
-	}
-
-	public void setPermissions(String permissions) {
-		this.permissions = permissions;
-	}
 
 	public String getRegion() {
 		return region;
@@ -305,6 +289,11 @@ public class GuildEntity implements ISnowflake {
 		return new ArrayList<>(this.invites.values());
 	}
 
+	@Nullable
+	public InviteEntity getInvite(String code) {
+		return this.invites.getOrDefault(code, null);
+	}
+
 	public void addInvite(InviteEntity invite) {
 		this.invites.put(invite.getCode(), invite);
 	}
@@ -329,7 +318,7 @@ public class GuildEntity implements ISnowflake {
 		guild.setDefaultMessageNotifactions(data.get("default_message_notifications").intValue());
 		guild.setContentFilter(data.get("explicit_content_filter").intValue());
 		RoleEntity.parseArrayFromJson((ArrayNode) data.get("roles")).forEach(guild::addRole);
-		EmojiEntity.parseArrayFromJson((ArrayNode) data.get("emojis")).forEach(guild::addEmoji);
+		EmojiEntity.parseArrayFromJson((ArrayNode) data.get("emojis"), guild).forEach(guild::addEmoji);
 		guild.setFeatures(GuildFeature.parseFeaturesFromArray((ArrayNode) data.get("features")));
 		guild.setMfaLevel(data.get("mfa_level").intValue());
 		guild.setSystemChannelFlags(data.get("system_channel_flags").intValue());

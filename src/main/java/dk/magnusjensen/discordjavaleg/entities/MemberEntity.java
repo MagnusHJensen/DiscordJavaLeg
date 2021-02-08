@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.util.ArrayList;
 
 public class MemberEntity {
-	private UserEntity user;
-	private String nickname = null;
-	private ArrayList<Long> roleIds;
+	private UserEntity user = null;
+	private String nick;
+	private ArrayList<RoleEntity> roles;
 	private String premiumSince = null;
 	private boolean deaf;
 	private boolean mute;
@@ -17,9 +17,9 @@ public class MemberEntity {
 	private GuildEntity guild;
 
 
-	public MemberEntity(UserEntity user, ArrayList<Long> roleIds, boolean deaf, boolean mute, GuildEntity guild) {
-		this.user = user;
-		this.roleIds = roleIds;
+	public MemberEntity(String nick, ArrayList<RoleEntity> roles, boolean deaf, boolean mute, GuildEntity guild) {
+		this.nick = nick;
+		this.roles = roles;
 		this.deaf = deaf;
 		this.mute = mute;
 		this.guild = guild;
@@ -33,19 +33,12 @@ public class MemberEntity {
 		return user;
 	}
 
-	public String getNickname() {
-		return nickname;
-	}
-	public void setNickName(String nickname) {
-		this.nickname = nickname;
+	public void setUser(UserEntity user) {
+		this.user = user;
 	}
 
-	public ArrayList<Long> getRoleIds() {
-		return roleIds;
-	}
-
-	public RoleEntity getRoleById(long id) {
-		return this.guild.fetchRole(id);
+	public String getNick() {
+		return nick;
 	}
 
 	public String getPremiumSince() {
@@ -86,20 +79,20 @@ public class MemberEntity {
 	}
 
 	public static MemberEntity parseMemberFromJson(JsonNode memberData, GuildEntity guild) {
-		UserEntity user = UserEntity.parseUserFromJsonNode(memberData.get("user"));
-		ArrayList<Long> roleIds = new ArrayList<>();
+		String nick = memberData.get("nick").textValue();
+		ArrayList<RoleEntity> roles = new ArrayList<>();
 		memberData.get("roles").forEach((roleId) -> {
-			roleIds.add(Long.parseLong(roleId.textValue()));
+			roles.add(guild.fetchRole(Long.parseLong(roleId.textValue())));
 		});
-
 		boolean deaf = memberData.get("deaf").booleanValue();
 		boolean mute = memberData.get("mute").booleanValue();
 
 
-		MemberEntity member = new MemberEntity(user, roleIds, deaf, mute, guild);
+		MemberEntity member = new MemberEntity(nick, roles, deaf, mute, guild);
 
-		if (memberData.has("nick")) {
-			member.setNickName(memberData.get("nick").textValue());
+		if (memberData.has("user")) {
+			member.setUser(UserEntity.parseUserFromJsonNode(memberData.get("user")));
+
 		}
 		if (memberData.has("permissions")) {
 			member.setPermissions(memberData.get("permissions").textValue());
