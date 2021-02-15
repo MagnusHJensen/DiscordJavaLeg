@@ -114,7 +114,7 @@ public class MessageEntity implements ISnowflake {
 		boolean mentionEveryone = data.get("mention_everyone").booleanValue();
 		ArrayList<UserEntity> mentions = new ArrayList<>();
 		(data.get("mentions")).forEach((user) -> {
-			mentions.add(UserEntity.parseUserFromJsonNode(user));
+			mentions.add(UserEntity.parseUserFromJsonNode(user, client));
 		});
 		ArrayList<RoleEntity> rolesMentions = RoleEntity.parseArrayFromJson((ArrayNode) data.get("mention_roles"));
 		boolean pinned = data.get("pinned").booleanValue();
@@ -129,7 +129,7 @@ public class MessageEntity implements ISnowflake {
 			msg.setGuildId(Long.parseLong(data.get("guild_id").textValue()));
 		}
 		if (data.has("author")) {
-			msg.setAuthor(UserEntity.parseUserFromJsonNode(data.get("author")));
+			msg.setAuthor(UserEntity.parseUserFromJsonNode(data.get("author"), client));
 		}
 
 		return msg;

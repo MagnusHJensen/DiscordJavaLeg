@@ -37,7 +37,7 @@ public class EventHandler {
 
 		switch (eventName) {
 			case "READY": {
-				this.client.setSelfUser(UserEntity.parseUserFromJsonNode(data.get("user")));
+				this.client.setSelfUser(UserEntity.parseUserFromJsonNode(data.get("user"), client));
 				ArrayNode guilds = (ArrayNode) data.get("guilds");
 				guilds.forEach((guild) -> {
 					client.addUnavailableGuild(guild.get("id").longValue());
@@ -63,8 +63,8 @@ public class EventHandler {
 			}
 			case "CHANNEL_CREATE": {
 				ChannelEntity channel = ChannelEntity.parseChannelFromJson(data, this.client);
-				if (channel.getGuildId() != null) {
-					this.client.getGuild(channel.getGuildId()).addChannel(channel);
+				if (channel.getGuild() != null) {
+					channel.getGuild().addChannel(channel);
 				}
 				ChannelCreateEvent event = new ChannelCreateEvent(this.client, channel);
 				ArrayList<EventListener<? extends Event>> listeners = this.client.getBuilder().getListenersForEvent(ChannelCreateEvent.class.getTypeName());
@@ -73,8 +73,8 @@ public class EventHandler {
 			}
 			case "CHANNEL_UPDATE": {
 				ChannelEntity channel = ChannelEntity.parseChannelFromJson(data, this.client);
-				if (channel.getGuildId() != null) {
-					this.client.getGuild(channel.getGuildId()).addChannel(channel);
+				if (channel.getGuild() != null) {
+					channel.getGuild().addChannel(channel);
 				}
 				ChannelUpdateEvent event = new ChannelUpdateEvent(this.client, channel);
 				ArrayList<EventListener<? extends Event>> listeners = this.client.getBuilder().getListenersForEvent(ChannelUpdateEvent.class.getTypeName());
@@ -83,8 +83,8 @@ public class EventHandler {
 			}
 			case "CHANNEL_DELETE": {
 				ChannelEntity channel = ChannelEntity.parseChannelFromJson(data, this.client);
-				if (channel.getGuildId() != null) {
-					this.client.getGuild(channel.getGuildId()).removeChannel(channel);
+				if (channel.getGuild() != null) {
+					channel.getGuild().removeChannel(channel);
 				}
 				ChannelDeleteEvent event = new ChannelDeleteEvent(this.client, channel);
 				ArrayList<EventListener<? extends Event>> listeners = this.client.getBuilder().getListenersForEvent(ChannelDeleteEvent.class.getTypeName());
@@ -102,7 +102,7 @@ public class EventHandler {
 			case "GUILD_BAN_ADD": {
 				long guildID = Long.parseLong(data.get("guild_id").textValue());
 				GuildEntity guild = this.client.getGuild(guildID);
-				UserEntity user = UserEntity.parseUserFromJsonNode(data.get("user"));
+				UserEntity user = UserEntity.parseUserFromJsonNode(data.get("user"), client);
 				GuildBanAddEvent event = new GuildBanAddEvent(this.client, guild, user);
 				ArrayList<EventListener<? extends Event>> listeners = this.client.getBuilder().getListenersForEvent(GuildBanAddEvent.class.getTypeName());
 				listeners.forEach((listener) -> ((EventListener<GuildBanAddEvent>) listener).onEvent(event));
@@ -111,7 +111,7 @@ public class EventHandler {
 			case "GUILD_BAN_REMOVE": {
 				long guildID = Long.parseLong(data.get("guild_id").textValue());
 				GuildEntity guild = this.client.getGuild(guildID);
-				UserEntity user = UserEntity.parseUserFromJsonNode(data.get("user"));
+				UserEntity user = UserEntity.parseUserFromJsonNode(data.get("user"), client);
 				GuildBanRemoveEvent event = new GuildBanRemoveEvent(this.client, guild, user);
 				ArrayList<EventListener<? extends Event>> listeners = this.client.getBuilder().getListenersForEvent(GuildBanRemoveEvent.class.getTypeName());
 				listeners.forEach((listener) -> ((EventListener<GuildBanRemoveEvent>) listener).onEvent(event));
@@ -120,7 +120,7 @@ public class EventHandler {
 			case "GUILD_MEMBER_ADD": {
 				long guildID = Long.parseLong(data.get("guild_id").textValue());
 				GuildEntity guild = this.client.getGuild(guildID);
-				MemberEntity member = MemberEntity.parseMemberFromJson(data, guild);
+				MemberEntity member = MemberEntity.parseMemberFromJson(data, guild, client);
 				guild.addMember(member);
 				GuildMemberAddEvent event = new GuildMemberAddEvent(this.client, guild, member);
 				ArrayList<EventListener<? extends Event>> listeners = this.client.getBuilder().getListenersForEvent(GuildMemberAddEvent.class.getTypeName());
@@ -130,7 +130,7 @@ public class EventHandler {
 			case "GUILD_MEMBER_REMOVE": {
 				long guildID = Long.parseLong(data.get("guild_id").textValue());
 				GuildEntity guild = this.client.getGuild(guildID);
-				UserEntity user = UserEntity.parseUserFromJsonNode(data);
+				UserEntity user = UserEntity.parseUserFromJsonNode(data, client);
 				guild.removeMember(user.getId());
 				GuildMemberRemoveEvent event = new GuildMemberRemoveEvent(this.client, guild, user);
 				ArrayList<EventListener<? extends Event>> listeners = this.client.getBuilder().getListenersForEvent(GuildMemberRemoveEvent.class.getTypeName());
@@ -170,10 +170,9 @@ public class EventHandler {
 				break;
 			}
 			case "INVITE_CREATE": {
-				InviteEntity invite = InviteEntity.parseInviteFromJson(data);
-				if (invite.getGuildId() != null) {
-					GuildEntity guild = this.client.getGuild(invite.getGuildId());
-					guild.addInvite(invite);
+				InviteEntity invite = InviteEntity.parseInviteFromJson(data, client);
+				if (invite.getGuild() != null) {
+					invite.getGuild().addInvite(invite);
 				}
 				GuildInviteCreateEvent event = new GuildInviteCreateEvent(this.client, invite);
 				ArrayList<EventListener<? extends Event>> listeners = this.client.getBuilder().getListenersForEvent(GuildInviteCreateEvent.class.getTypeName());

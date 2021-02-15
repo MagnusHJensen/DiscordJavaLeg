@@ -1,6 +1,7 @@
 package dk.magnusjensen.discordjavaleg.entities;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import dk.magnusjensen.discordjavaleg.DiscordJavaLeg;
 import org.jetbrains.annotations.Nullable;
 
 public class UserEntity implements ISnowflake {
@@ -100,8 +101,12 @@ public class UserEntity implements ISnowflake {
 		return publicFlags;
 	}
 
-	public static UserEntity parseUserFromJsonNode(JsonNode node) {
-		return new UserEntity(Long.parseLong(node.get("id").textValue()), node.get("username").asText(), node.get("discriminator").asText());
+	public static UserEntity parseUserFromJsonNode(JsonNode node, DiscordJavaLeg client) {
+		UserEntity user = new UserEntity(Long.parseLong(node.get("id").textValue()), node.get("username").asText(), node.get("discriminator").asText());
+		if (client.getUserById(user.getId()) == null) {
+			client.cacheUser(user);
+		}
+		return user;
 	}
 
 	@Override

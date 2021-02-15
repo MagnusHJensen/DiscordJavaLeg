@@ -11,12 +11,12 @@ public class ChannelEntity implements ISnowflake {
 	private DiscordJavaLeg client;
 	private long id;
 	private int type;
-	private Long guildId = null;
+	private GuildEntity guild = null;
 	private Integer position = null;
 	private String name = null;
 	private String topic = null;
 	private Boolean nsfw = null;
-	private Long lastMessageId = null;
+	private MessageEntity lastMessage = null;
 	private Integer bitrate = null;
 	private Integer userLimit = null;
 	private Integer rateLimitPerUser = null;
@@ -40,19 +40,20 @@ public class ChannelEntity implements ISnowflake {
 		return type;
 	}
 
-	public Long getGuildId() {
-		return guildId;
+
+	public GuildEntity getGuild() {
+		return guild;
 	}
 
-	public void setGuildId(Long guildId) {
-		this.guildId = guildId;
+	private void setGuild(GuildEntity guild) {
+		this.guild = guild;
 	}
 
 	public Integer getPosition() {
 		return position;
 	}
 
-	public void setPosition(Integer position) {
+	private void setPosition(Integer position) {
 		this.position = position;
 	}
 
@@ -60,7 +61,7 @@ public class ChannelEntity implements ISnowflake {
 		return name;
 	}
 
-	public void setName(String name) {
+	private void setName(String name) {
 		this.name = name;
 	}
 
@@ -68,7 +69,7 @@ public class ChannelEntity implements ISnowflake {
 		return topic;
 	}
 
-	public void setTopic(String topic) {
+	private void setTopic(String topic) {
 		this.topic = topic;
 	}
 
@@ -76,23 +77,15 @@ public class ChannelEntity implements ISnowflake {
 		return nsfw;
 	}
 
-	public void setNsfw(Boolean nsfw) {
+	private void setNsfw(Boolean nsfw) {
 		this.nsfw = nsfw;
-	}
-
-	public Long getLastMessageId() {
-		return lastMessageId;
-	}
-
-	public void setLastMessageId(Long lastMessageId) {
-		this.lastMessageId = lastMessageId;
 	}
 
 	public Integer getBitrate() {
 		return bitrate;
 	}
 
-	public void setBitrate(Integer bitrate) {
+	private void setBitrate(Integer bitrate) {
 		this.bitrate = bitrate;
 	}
 
@@ -100,7 +93,7 @@ public class ChannelEntity implements ISnowflake {
 		return userLimit;
 	}
 
-	public void setUserLimit(Integer userLimit) {
+	private void setUserLimit(Integer userLimit) {
 		this.userLimit = userLimit;
 	}
 
@@ -108,7 +101,7 @@ public class ChannelEntity implements ISnowflake {
 		return rateLimitPerUser;
 	}
 
-	public void setRateLimitPerUser(Integer rateLimitPerUser) {
+	private void setRateLimitPerUser(Integer rateLimitPerUser) {
 		this.rateLimitPerUser = rateLimitPerUser;
 	}
 
@@ -116,7 +109,7 @@ public class ChannelEntity implements ISnowflake {
 		return icon;
 	}
 
-	public void setIcon(String icon) {
+	private void setIcon(String icon) {
 		this.icon = icon;
 	}
 
@@ -124,7 +117,7 @@ public class ChannelEntity implements ISnowflake {
 		return ownerId;
 	}
 
-	public void setOwnerId(Long ownerId) {
+	private void setOwnerId(Long ownerId) {
 		this.ownerId = ownerId;
 	}
 
@@ -132,7 +125,7 @@ public class ChannelEntity implements ISnowflake {
 		return applicationId;
 	}
 
-	public void setApplicationId(Long applicationId) {
+	private void setApplicationId(Long applicationId) {
 		this.applicationId = applicationId;
 	}
 
@@ -140,8 +133,18 @@ public class ChannelEntity implements ISnowflake {
 		return parentId;
 	}
 
-	public void setParentId(Long parentId) {
+	private void setParentId(Long parentId) {
 		this.parentId = parentId;
+	}
+
+	public MessageEntity getLastMessage() {
+		return this.lastMessage;
+	}
+
+	private void setLastMessage(MessageEntity message) {
+		if (message != null) {
+			this.lastMessage = message;
+		}
 	}
 
 	public MessageEntity send(String msg) {
@@ -168,7 +171,8 @@ public class ChannelEntity implements ISnowflake {
 		ChannelEntity channel = new ChannelEntity(client, id, type);
 
 		if (channelData.has("guild_id")) {
-			channel.setGuildId(Long.parseLong(channelData.get("guild_id").textValue()));
+
+			channel.setGuild(client.getGuild(Long.parseLong(channelData.get("guild_id").textValue())));
 		}
 		if (channelData.has("position")) {
 			channel.setPosition(channelData.get("position").intValue());
@@ -183,7 +187,7 @@ public class ChannelEntity implements ISnowflake {
 			channel.setNsfw(channelData.get("nsfw").booleanValue());
 		}
 		if (channelData.hasNonNull("last_message_id")) {
-			channel.setLastMessageId(Long.parseLong(channelData.get("last_message_id").textValue()));
+			channel.setLastMessage(client.fetchMessage(id, Long.parseLong(channelData.get("last_message_id").textValue())));
 		}
 		if (channelData.has("bitrate")) {
 			channel.setBitrate(channelData.get("bitrate").intValue());
@@ -205,6 +209,10 @@ public class ChannelEntity implements ISnowflake {
 		}
 		if (channelData.has("parent_id")) {
 			channel.setParentId(Long.parseLong(channelData.get("parent_id").textValue()));
+		}
+
+		if (client.getChannelById(channel.getId()) == null) {
+			client.cacheChannel(channel);
 		}
 
 		return channel;

@@ -318,7 +318,7 @@ public class GuildEntity implements ISnowflake {
 		guild.setDefaultMessageNotifactions(data.get("default_message_notifications").intValue());
 		guild.setContentFilter(data.get("explicit_content_filter").intValue());
 		RoleEntity.parseArrayFromJson((ArrayNode) data.get("roles")).forEach(guild::addRole);
-		EmojiEntity.parseArrayFromJson((ArrayNode) data.get("emojis"), guild).forEach(guild::addEmoji);
+		EmojiEntity.parseArrayFromJson((ArrayNode) data.get("emojis"), guild, client).forEach(guild::addEmoji);
 		guild.setFeatures(GuildFeature.parseFeaturesFromArray((ArrayNode) data.get("features")));
 		guild.setMfaLevel(data.get("mfa_level").intValue());
 		guild.setSystemChannelFlags(data.get("system_channel_flags").intValue());
@@ -350,9 +350,7 @@ public class GuildEntity implements ISnowflake {
 
 		ArrayList<InviteEntity> invites = client.getInvitesForGuild(guild.id);
 
-		invites.forEach((invite) -> {
-			guild.addInvite(invite);
-		});
+		invites.forEach(guild::addInvite);
 
 		return guild;
 	}

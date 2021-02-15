@@ -10,6 +10,7 @@ import dk.magnusjensen.discordjavaleg.entities.*;
 import dk.magnusjensen.discordjavaleg.events.Event;
 import dk.magnusjensen.discordjavaleg.events.EventListener;
 import okhttp3.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
@@ -30,6 +31,8 @@ public class DiscordJavaLeg {
 	private String sessionId;
 	private UserEntity selfUser;
 	private Map<Long, GuildEntity> guilds = new HashMap<>();
+	private Map<Long, ChannelEntity> channels = new HashMap<>();
+	private Map<Long, UserEntity> users = new HashMap<>();
 	private ArrayList<Long> unavailableGuilds = new ArrayList<>();
 
 	public DiscordJavaLeg(Builder builder){
@@ -168,6 +171,27 @@ public class DiscordJavaLeg {
 		this.guilds.put(guild.getId(), guild);
 	}
 
+	public void cacheUser(UserEntity user) {
+		this.users.put(user.getId(), user);
+	}
+
+	public UserEntity getUserById(long id) {
+		return this.users.get(id);
+	}
+
+	public void cacheChannel(ChannelEntity channel) {
+		this.channels.put(channel.getId(), channel);
+	}
+
+	public ChannelEntity getChannelById(long id) {
+		if (this.channels.containsKey(id)) {
+			return this.channels.get(id);
+		}
+
+		// Should the client cache channels? Should they only be accessed from guilds? Maybe, this can be for private dm's channel.
+		return null;
+	}
+
 	public int getAvailableGuildsCount() {
 		return this.guilds.size();
 	}
@@ -245,10 +269,28 @@ public class DiscordJavaLeg {
 		try {
 			Response response = call.execute();
 			ArrayNode inviteData = this.mapper.readValue(response.body().string(), ArrayNode.class);
-			return InviteEntity.parseInvitesFromJson(inviteData);
+			return InviteEntity.parseInvitesFromJson(inviteData, this);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 			return new ArrayList<>();
+		}
+	}
+
+	@Nullable
+	public MessageEntity fetchMessage(long channelId, long messageId) {
+		Request request = new Request.Builder()
+				.url(this.API_BASE_URL + "/channels/" + channelId + "/messages/" + messageId)
+				.get()
+				.build();
+
+		Call call = this.API_CLIENT.newCall(request);
+		try {
+			Response response = call.execute();
+			JsonNode messageData = this.mapper.readValue(response.body().string(), JsonNode.class);
+			return MessageEntity.parseMessageFromJson(messageData, this);
+		} catch (IOException exception) {
+			exception.printStackTrace();
+			return null;
 		}
 	}
 

@@ -2,6 +2,7 @@ package dk.magnusjensen.discordjavaleg.entities;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import dk.magnusjensen.discordjavaleg.DiscordJavaLeg;
 
 import java.util.ArrayList;
 
@@ -13,7 +14,7 @@ public class MemberEntity {
 	private boolean deaf;
 	private boolean mute;
 	private boolean pending = false;
-	private String permission = null;
+	private String permissions = null;
 	private GuildEntity guild;
 
 
@@ -63,22 +64,22 @@ public class MemberEntity {
 		this.pending = pending;
 	}
 
-	public String getPermission() {
-		return permission;
+	public String getPermissions() {
+		return permissions;
 	}
 	public void setPermissions(String perms) {
-		this.permission = perms;
+		this.permissions = perms;
 	}
 
-	protected static ArrayList<MemberEntity> parseArrayFromJson(ArrayNode node, GuildEntity guild) {
+	protected static ArrayList<MemberEntity> parseArrayFromJson(ArrayNode node, GuildEntity guild, DiscordJavaLeg client) {
 		ArrayList<MemberEntity> members = new ArrayList<>();
 
-		node.forEach((memberData) -> members.add(parseMemberFromJson(memberData, guild)));
+		node.forEach((memberData) -> members.add(parseMemberFromJson(memberData, guild, client)));
 
 		return members;
 	}
 
-	public static MemberEntity parseMemberFromJson(JsonNode memberData, GuildEntity guild) {
+	public static MemberEntity parseMemberFromJson(JsonNode memberData, GuildEntity guild, DiscordJavaLeg client) {
 		String nick = memberData.get("nick").textValue();
 		ArrayList<RoleEntity> roles = new ArrayList<>();
 		memberData.get("roles").forEach((roleId) -> {
@@ -91,7 +92,7 @@ public class MemberEntity {
 		MemberEntity member = new MemberEntity(nick, roles, deaf, mute, guild);
 
 		if (memberData.has("user")) {
-			member.setUser(UserEntity.parseUserFromJsonNode(memberData.get("user")));
+			member.setUser(UserEntity.parseUserFromJsonNode(memberData.get("user"), client));
 
 		}
 		if (memberData.has("permissions")) {

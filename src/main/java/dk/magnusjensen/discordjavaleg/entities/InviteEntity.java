@@ -2,22 +2,23 @@ package dk.magnusjensen.discordjavaleg.entities;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import dk.magnusjensen.discordjavaleg.DiscordJavaLeg;
 
 import java.util.ArrayList;
 
 public class InviteEntity {
-	private long channelId;
+	private ChannelEntity channel;
 	private String code;
 	private String createdAt;
-	private Long guildId = null;
+	private GuildEntity guild = null;
 	private UserEntity inviter = null;
 	private int maxAge;
 	private int maxUses;
 	private boolean temporary;
 	private int uses;
 
-	public InviteEntity(long channelId, String code, String createdAt, int maxAge, int maxUses, boolean temporary, int uses) {
-		this.channelId = channelId;
+	public InviteEntity(ChannelEntity channel, String code, String createdAt, int maxAge, int maxUses, boolean temporary, int uses) {
+		this.channel = channel;
 		this.code = code;
 		this.createdAt = createdAt;
 		this.maxAge = maxAge;
@@ -26,8 +27,8 @@ public class InviteEntity {
 		this.uses = uses;
 	}
 
-	public long getChannelId() {
-		return channelId;
+	public ChannelEntity getChannel() {
+		return channel;
 	}
 
 	public String getCode() {
@@ -38,12 +39,12 @@ public class InviteEntity {
 		return createdAt;
 	}
 
-	public Long getGuildId() {
-		return guildId;
+	public GuildEntity getGuild() {
+		return guild;
 	}
 
-	private void setGuildId(long guildId) {
-		this.guildId = guildId;
+	private void setGuild(GuildEntity guild) {
+		this.guild = guild;
 	}
 
 	public UserEntity getInviter() {
@@ -73,7 +74,7 @@ public class InviteEntity {
 		return uses;
 	}
 
-	public static InviteEntity parseInviteFromJson(JsonNode data) {
+	public static InviteEntity parseInviteFromJson(JsonNode data, DiscordJavaLeg client) {
 		long channelId = Long.parseLong(data.get("channel_id").textValue());
 		String code = data.get("code").textValue();
 		String createdAt = data.get("created_at").textValue();
@@ -83,23 +84,23 @@ public class InviteEntity {
 		int uses = data.get("uses").intValue();
 
 
-		InviteEntity invite = new InviteEntity(channelId, code, createdAt, maxAge, maxUses, temporary, uses);
+		InviteEntity invite = new InviteEntity(client.getChannelById(channelId), code, createdAt, maxAge, maxUses, temporary, uses);
 
 		if (data.has("guild_id")) {
-			invite.setGuildId(Long.parseLong(data.get("guild_id").textValue()));
+			invite.setGuild(client.getGuild(Long.parseLong(data.get("guild_id").textValue())));
 		}
 		if (data.has("inviter")) {
-			invite.setInviter(UserEntity.parseUserFromJsonNode(data.get("inviter")));
+			invite.setInviter(UserEntity.parseUserFromJsonNode(data.get("inviter"), client));
 		}
 
 		return invite;
 	}
 
-	public static ArrayList<InviteEntity> parseInvitesFromJson(ArrayNode data) {
+	public static ArrayList<InviteEntity> parseInvitesFromJson(ArrayNode data, DiscordJavaLeg client) {
 		ArrayList<InviteEntity> invites = new ArrayList<>();
 
 		data.forEach((inviteData) -> {
-			invites.add(parseInviteFromJson(inviteData));
+			invites.add(parseInviteFromJson(inviteData, client));
 		});
 
 		return invites;
